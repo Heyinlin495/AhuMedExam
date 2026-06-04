@@ -1,4 +1,5 @@
 import { router } from '@kit.ArkUI'
+import { PageRoutes } from '../constants/AppConstants'
 
 @Entry
 @Component
@@ -6,8 +7,7 @@ struct Index {
   @State message: string = 'Hello World';
 
   aboutToAppear() {
-    // 应用启动时跳转到登录页面
-    router.pushUrl({ url: 'pages/LoginPage' })
+    router.pushUrl({ url: PageRoutes.LOGIN })
   }
 
   build() {
@@ -19,9 +19,6 @@ struct Index {
         .alignRules({
           center: { anchor: '__container__', align: VerticalAlign.Center },
           middle: { anchor: '__container__', align: HorizontalAlign.Center }
-        })
-        .onClick(() => {
-          this.message = 'Welcome';
         })
     }
     .height('100%')

@@ -5,6 +5,18 @@
     "pages/Index",
     "pages/SmsLoginPage",
     "pages/ForgotPasswordPage",
-    "pages/SwitchLoginPage"
+    "pages/SwitchLoginPage",
+    "pages/VideoDetailPage",
+    "pages/AIAssistantPage",
+    "pages/OnlineSchoolCoursePage",
+    "pages/QuestionBankPage",
+    "pages/ExamMaterialPage",
+    "pages/LiveHallPage",
+    "pages/BannerDetailPage",
+    "pages/PersonalInfoPage",
+    "pages/ChangePasswordPage",
+    "pages/BindPhonePage",
+    "pages/BindWechatPage",
+    "pages/RegisterPage"
   ]
 }

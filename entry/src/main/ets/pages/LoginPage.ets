@@ -1,11 +1,19 @@
 import { router } from '@kit.ArkUI'
+import { common } from '@kit.AbilityKit'
+import { AppColors, PageRoutes } from '../constants/AppConstants'
+import { db } from '../utils/DatabaseHelper'
 
 @Entry
 @Component
 struct LoginPage {
-  @State username: string = 'heyinlin'
-  @State password: string = '123456'
-  @State showPassword: boolean = false
+  @State username: string = ''
+  @State password: string = ''
+  @State errorMsg: string = ''
+
+  async aboutToAppear() {
+    const context = getContext(this) as common.UIAbilityContext
+    await db.init(context)
+  }
 
   build() {
     Column() {
@@ -18,7 +26,7 @@ struct LoginPage {
       // 阿虎医考标题
       Text('阿虎医考')
         .fontSize(32)
-        .fontColor('#FF6B00')
+        .fontColor(AppColors.PRIMARY_ORANGE)
         .fontWeight(FontWeight.Bold)
         .margin({ top: 40 })
 
@@ -28,9 +36,10 @@ struct LoginPage {
         .height(50)
         .margin({ top: 40 })
         .borderRadius(25)
-        .backgroundColor('#F5F5F5')
+        .backgroundColor(AppColors.BG_INPUT)
         .onChange((value: string) => {
           this.username = value
+          this.errorMsg = ''
         })
 
       // 密码输入框
@@ -40,29 +49,37 @@ struct LoginPage {
         .type(InputType.Password)
         .margin({ top: 20 })
         .borderRadius(25)
-        .backgroundColor('#F5F5F5')
+        .backgroundColor(AppColors.BG_INPUT)
         .onChange((value: string) => {
           this.password = value
+          this.errorMsg = ''
         })
+
+      // 错误提示
+      if (this.errorMsg.length > 0) {
+        Text(this.errorMsg)
+          .fontSize(13)
+          .fontColor(AppColors.ERROR_RED)
+          .width('80%')
+          .margin({ top: 8 })
+      }
 
       // 短信验证码登录和忘记密码
       Row() {
         Text('短信验证码登录')
           .fontSize(14)
-          .fontColor('#666666')
+          .fontColor(AppColors.PRIMARY_BLUE)
           .onClick(() => {
-            // 跳转到短信验证码登录页面
-            router.pushUrl({ url: 'pages/SmsLoginPage' })
+            router.pushUrl({ url: PageRoutes.SMS_LOGIN })
           })
 
         Blank()
 
         Text('忘记密码')
           .fontSize(14)
-          .fontColor('#666666')
+          .fontColor(AppColors.PRIMARY_BLUE)
           .onClick(() => {
-            // 跳转到忘记密码页面
-            router.pushUrl({ url: 'pages/ForgotPasswordPage' })
+            router.pushUrl({ url: PageRoutes.FORGOT_PASSWORD })
           })
       }
       .width('80%')
@@ -74,35 +91,77 @@ struct LoginPage {
         .height(50)
         .margin({ top: 30 })
         .borderRadius(25)
-        .backgroundColor('#2196F3')
-        .fontColor('#FFFFFF')
+        .backgroundColor(AppColors.PRIMARY_BLUE)
+        .fontColor(AppColors.BG_WHITE)
         .fontSize(18)
         .onClick(() => {
-          // 登录逻辑 - 验证用户名和密码
-          if (this.username === 'heyinlin' && this.password === '123456') {
-            // 登录成功，跳转到首页
-            router.pushUrl({
-              url: 'pages/HomePage',
-              params: { username: this.username }
-            })
-          } else {
-            // 登录失败，提示用户
-            console.error('用户名或密码错误')
-          }
+          this.login()
         })
 
-      // 切换登录方式
-      Text('切换登录方式')
-        .fontSize(14)
-        .fontColor('#666666')
-        .margin({ top: 20 })
-        .onClick(() => {
-          // 跳转到切换登录方式页面
-          router.pushUrl({ url: 'pages/SwitchLoginPage' })
-        })
+      // 注册账户和切换登录方式
+      Row() {
+        Text('注册账户')
+          .fontSize(14)
+          .fontColor(AppColors.TEXT_PRIMARY)
+          .onClick(() => {
+            router.pushUrl({ url: PageRoutes.REGISTER })
+          })
+
+        Text(' | ')
+          .fontSize(14)
+          .fontColor(AppColors.TEXT_TERTIARY)
+
+        Text('切换登录方式')
+          .fontSize(14)
+          .fontColor(AppColors.TEXT_PRIMARY)
+          .onClick(() => {
+            router.pushUrl({ url: PageRoutes.SWITCH_LOGIN })
+          })
+      }
+      .margin({ top: 20 })
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#FFFFFF')
+    .backgroundColor(AppColors.BG_WHITE)
+  }
+
+  private async login() {
+    this.errorMsg = ''
+
+    if (this.username.length === 0 || this.password.length === 0) {
+      this.errorMsg = '请输入用户名和密码'
+      return
+    }
+
+    // 内置测试账户
+    if (this.username === 'heyinlin' && this.password === '123456') {
+      router.pushUrl({
+        url: PageRoutes.HOME,
+        params: { username: this.username }
+      })
+      return
+    }
+
+    try {
+      // 查数据库
+      const exists = await db.userExists(this.username)
+      if (!exists) {
+        this.errorMsg = '该用户未注册'
+        return
+      }
+
+      const ok = await db.checkPassword(this.username, this.password)
+      if (!ok) {
+        this.errorMsg = '密码错误'
+        return
+      }
+
+      router.pushUrl({
+        url: PageRoutes.HOME,
+        params: { username: this.username }
+      })
+    } catch (err) {
+      this.errorMsg = '登录失败: ' + String(err)
+    }
   }
 }
